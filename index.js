@@ -17,12 +17,14 @@ app.use(cookieParser())
 app.use(cors({
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
-  origin: ['http://localhost:3000'],
+  origin: ['http://localhost:3000']
 }))
 
 app.use('/users', users)
 
 const run = async () => {
+  mongoose.set('strictQuery', false)
+
   await mongoose.connect(config.mongo.db, config.mongo.options)
   console.log('Mongo connected')
   app.listen(port, () => {
