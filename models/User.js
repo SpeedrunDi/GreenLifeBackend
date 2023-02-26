@@ -19,7 +19,7 @@ const validateEmail = value => {
 }
 
 const UserSchema = new Schema({
-  username: {
+  name: {
     type: String,
     required: true
   },
@@ -45,14 +45,7 @@ const UserSchema = new Schema({
   phone: {
     type: String
   },
-  confirmationCode: {
-    type: String,
-    unique: true,
-  },
-  authentication: {
-    type: Boolean,
-    default: false,
-  },
+  token: String,
   resetPasswordToken: {
     type: String,
     default: '',

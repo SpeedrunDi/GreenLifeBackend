@@ -1,5 +1,4 @@
 const express = require("express")
-const nodemailer = require("./nodemailer");
 const User = require("../models/User");
 const auth = require("../middleware/auth");
 const {getToken} = require("../middleware/token");
@@ -7,24 +6,14 @@ const {getToken} = require("../middleware/token");
 const router = express.Router()
 
 const getLiveCookie = user => {
-  const { username } = user
+  const { name } = user
   const maxAge = 730 * 60 * 60
-  return { token: getToken(username, maxAge), maxAge }
-}
-
-const getLiveSecretCookie = user => {
-  const { username } = user
-  const maxAge = 5 * 60 * 60
-  return { token: getToken(username, maxAge), maxAge }
+  return { token: getToken(name, maxAge), maxAge }
 }
 
 router.get('/', auth, async (req, res) => {
   try {
-    const query = { role: { $in: ['ban', 'user'] }, authentication: true }
-
-    if (req.query.email) query.email = req.query.email
-
-    const users = await User.find(query, { name: 1, email: 1, _id: 1, role: 1, username: 1 })
+    const users = await User.find({ role: 'user' })
 
     return res.send(users)
   } catch {
@@ -32,32 +21,17 @@ router.get('/', auth, async (req, res) => {
   }
 })
 
-router.get('/confirm/:confirmationCode', async (req, res) => {
-  try {
-    const user = await User.findOne({ confirmationCode: req.params.confirmationCode })
-    if (!user) {
-      return res.status(404).send({ message: 'User not found' })
-    }
-    user.authentication = true
-    await user.save({ validateBeforeSave: false })
-    return res.send({ message: 'Account confirm' })
-  } catch (e) {
-    return res.status(500).send({ message: e })
-  }
-})
-
 router.post('/', async (req, res) => {
   try {
-    const secretToken = getLiveSecretCookie({ email: req.body.email })
-    const { email, password, username } = req.body
+    const { email, password, name } = req.body
 
-    const userData = { email, password, username, confirmationCode: secretToken.token }
+    const userData = { email, password, name }
 
     const user = new User(userData)
 
     const { token, maxAge } = getLiveCookie(user)
 
-    res.cookie('jwt', token, {
+    res.cookie('greenlife', token, {
       httpOnly: false,
       maxAge: maxAge * 1000,
     })
@@ -65,8 +39,6 @@ router.post('/', async (req, res) => {
     user.token = token
 
     await user.save()
-
-    nodemailer.sendConfirmationCode(user.username, user.email, user.confirmationCode)
 
     return res.status(201).send(user)
   } catch (e) {
@@ -76,8 +48,8 @@ router.post('/', async (req, res) => {
 
 router.post('/sessions', async (req, res) => {
   try {
-    if (req.cookies.jwt) {
-      const user = await User.findOne({ token: req.cookies.jwt })
+    if (req.cookies.greenlife) {
+      const user = await User.findOne({ token: req.cookies.greenlife })
       return res.send(user)
     }
 
@@ -91,10 +63,6 @@ router.post('/sessions', async (req, res) => {
       return res.status(401).send({ message: 'Введенные данные не верны!' })
     }
 
-    if (user.authentication !== true) {
-      return res.status(401).send({ message: 'Пожалуйста, подтвердите свою регистрацию на почте!' })
-    }
-
     const isMatch = await user.checkPassword(req.body.password)
     if (!isMatch) {
       return res.status(401).send({ message: 'Введенные данные не верны!' })
@@ -102,10 +70,12 @@ router.post('/sessions', async (req, res) => {
 
     const { token, maxAge } = getLiveCookie(user)
 
-    res.cookie('jwt', token, {
-      httpOnly: false,
-      maxAge: maxAge * 1000,
-    })
+    if (req.body?.remember) {
+      res.cookie('greenlife', token, {
+        httpOnly: false,
+        maxAge: maxAge * 1000,
+      })
+    }
 
     user.token = token
     await user.save({ validateBeforeSave: false })
@@ -113,6 +83,28 @@ router.post('/sessions', async (req, res) => {
     return res.send(user)
   } catch (e) {
     return res.status(500).send({ error: e })
+  }
+})
+
+router.delete('/sessions', async (req, res) => {
+  try {
+    const success = { message: 'Success' }
+    const cookie = req.cookies.greenlife
+
+    if (!cookie) return res.send(success)
+
+    const user = await User.findOne({ token: cookie })
+
+    if (!user) return res.send(success)
+
+    const { token } = getLiveCookie(user)
+    user.token = token
+
+    await user.save({ validateBeforeSave: false })
+
+    return res.send({ success, user })
+  } catch (e) {
+    return res.status(500).send(e)
   }
 })
 
