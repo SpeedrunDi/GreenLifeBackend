@@ -31,7 +31,7 @@ const run = async () => {
 
   await mongoose.connect(config.mongo.db, config.mongo.options)
   console.log('Mongo connected')
-  app.listen(port, () => {
+  app.listen(process.env.PORT || port, () => {
     console.log(`Server started on ${port} port!`)
   })
 
