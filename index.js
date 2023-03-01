@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser')
 const config = require('./config')
 const users = require('./app/users')
 const products = require('./app/products')
+const orders = require('./app/orders')
 
 const app = express()
 const port = 8000
@@ -23,6 +24,7 @@ app.use(cors({
 
 app.use('/users', users)
 app.use('/products', products)
+app.use('/orders', orders)
 
 const run = async () => {
   mongoose.set('strictQuery', false)

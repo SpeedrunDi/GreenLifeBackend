@@ -12,8 +12,8 @@ module.exports = {
       useUnifiedTopology: true,
     },
   },
-  facebook: {
-    appId: process.env.FACEBOOK_APP_ID,
-    appSecret: process.env.FACEBOOK_APP_SECRET,
-  },
+  telegram: {
+    token: process.env.TELEGRAM_TOKEN,
+    chatId: process.env.ADMIN_CHAT
+  }
 }
