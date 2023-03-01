@@ -2,8 +2,23 @@ const express = require('express')
 const axios = require("axios");
 const Order = require('../models/Order')
 const config = require('../config')
+const auth = require("../middleware/auth");
 
 const router = express.Router()
+
+router.get('/', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(401).send('Нету прав!')
+    }
+
+    const orders = await Order.find().populate('products._id', 'title price')
+
+    return res.send(orders)
+  } catch (e) {
+    return res.status(500).send(e)
+  }
+})
 
 router.post('/', async (req, res) => {
   try {
@@ -14,7 +29,8 @@ router.post('/', async (req, res) => {
     const orderData = {
       clientName: req.body.name,
       phone: req.body.phone,
-      products: req.body.products
+      products: req.body.products,
+      totalPrice: req.body.totalPrice
     }
 
     const order = new Order(orderData)
@@ -25,11 +41,14 @@ router.post('/', async (req, res) => {
     let message = `<b>Заказ</b>
     <b>Отправитель</b>: ${order.clientName}
     <b>Телефон</b>: ${order.phone}
-    <b>Товар</b>:
+    <b>Товары</b>:
     ${orderData.products.map(product => (
-      product.title + ': ' + product.count + ' штук'
+      `<b>
+        Товар: ${product.title} 
+        кол-во: ${product.count}
+</b>`
     ))}
-    <b>Стоимость</b>: ${req.body?.totalPrice}`
+    <b>Стоимость</b>: ${order.totalPrice}`
 
     await axios.post(uri_bot, {
       chat_id: config.telegram.chatId,

@@ -10,6 +10,10 @@ const OrderSchema = new Schema({
     type: String,
     required: true
   },
+  totalPrice: {
+    type: Number,
+    required: true
+  },
   products: [{
     _id: {
       type: Schema.Types.ObjectId,
