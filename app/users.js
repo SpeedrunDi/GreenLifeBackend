@@ -35,16 +35,16 @@ router.post('/', async (req, res) => {
 
     const { token, maxAge } = getLiveCookie(user)
 
+    user.token = token
+
+    await user.save()
+
     res.cookie('greenlife', token, {
       httpOnly: false,
       maxAge: maxAge * 1000,
     })
 
-    user.token = token
-
-    await user.save()
-
-    return res.status(201).send(user)
+    return res.send(user)
   } catch (e) {
     return res.status(400).send(e)
   }

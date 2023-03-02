@@ -3,7 +3,6 @@ const { nanoid } = require('nanoid')
 
 const config = require('./config')
 const User = require('./models/User')
-const Product = require("./models/Product");
 
 const run = async () => {
   mongoose.set('strictQuery', false)
@@ -16,7 +15,7 @@ const run = async () => {
     await mongoose.connection.db.dropCollection(coll.name)
   }
 
-  const [admin, user] = await User.create(
+  await User.create(
     {
       name: 'Admin',
       email: 'admin@gmail.com',
@@ -32,21 +31,6 @@ const run = async () => {
       role: 'user',
     }
   )
-
-  await Product.create({
-    title: "Nvidia RTX 3080",
-    price: 2000,
-    image: 'fixtures/cpu.jpg',
-  }, {
-    title: "i3 11 500",
-    price: 150000,
-    image: 'fixtures/rtx3080.jpg',
-  }, {
-    title: "lenovo",
-    description: "ryzen 5 5300u",
-    price: 70000,
-    image: 'fixtures/notebook.jpg',
-  });
 
   await mongoose.connection.close()
 }

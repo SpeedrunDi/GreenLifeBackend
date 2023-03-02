@@ -26,6 +26,10 @@ router.post('/', async (req, res) => {
       return res.status(400).send({error: "не верные данные"})
     }
 
+    if (req.body.products?.length === 0) {
+      return res.status(400).send({error: "не верные данные"})
+    }
+
     const orderData = {
       clientName: req.body.name,
       phone: req.body.phone,
@@ -44,7 +48,7 @@ router.post('/', async (req, res) => {
     <b>Товары</b>:
     ${orderData.products.map(product => (
       `<b>
-        Товар: ${product.title} 
+        Товар: ${product.title}
         кол-во: ${product.count}
 </b>`
     ))}
