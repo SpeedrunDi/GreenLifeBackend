@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const {nanoid} = require('nanoid');
+const fs = require("fs");
 
 const config = require('../config');
 const Product = require("../models/Product");
@@ -76,18 +77,52 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
   }
 });
 
+router.patch('/:id', auth, async (req, res) => {
+  try {
+    const id = req.params.id
+
+    if (req.user.role !== 'admin') {
+      return res.status(403).send({message: "You not have right!"})
+    }
+
+    if (!id) {
+      return res.status(400).send({error: 'Data not valid!'})
+    }
+
+    const product = await Product.findById(id)
+
+    if (!product) {
+      return res.status(404).send({error: 'Product not found!'})
+    }
+
+    await Product.findByIdAndUpdate(id, {stock: !product.stock}, {new: true})
+
+    return res.send({message: 'Данные обновлены'})
+  } catch (e) {
+    return res.status(500).send(e)
+  }
+});
+
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const products = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id);
 
-    if (!products) {
+    if (!product) {
       return res.status(404).send({message: "Product not found!"});
     }
 
     if (req.user.role === 'admin') {
       await Product.deleteOne({_id: req.params.id});
 
-      return res.send({message: 'Task deleted!'});
+      if (product?.image) {
+        fs.unlink(`${config.uploadPath}/${product.image}`, err => {
+          if (err) {
+            console.log(err)
+          }
+        })
+      }
+
+      return res.send({message: 'Product deleted!'});
     }
 
     return res.status(403).send({message: "You not have right!"});

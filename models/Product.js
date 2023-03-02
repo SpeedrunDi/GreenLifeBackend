@@ -11,10 +11,12 @@ const ProductSchema = new Schema({
     min: 0,
     required: true
   },
-  description: {
-    type: String
-  },
-  image: String
+  description: String,
+  image: String,
+  stock: {
+    type: Boolean,
+    default: true
+  }
 });
 
 const Product = mongoose.model('Product', ProductSchema);

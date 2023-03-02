@@ -13,11 +13,15 @@ const getLiveCookie = user => {
 
 router.get('/', auth, async (req, res) => {
   try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).send({message: "You not have right!"});
+    }
+
     const users = await User.find({ role: 'user' })
 
     return res.send(users)
   } catch {
-    return res.status(500)
+    return res.sendStatus(500)
   }
 })
 

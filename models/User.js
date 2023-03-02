@@ -46,15 +46,6 @@ const UserSchema = new Schema({
     type: String
   },
   token: String,
-  resetPasswordToken: {
-    type: String,
-    default: '',
-  },
-  resetPasswordExpires: Date,
-  newPassword: {
-    type: String,
-    default: '',
-  },
 })
 
 UserSchema.pre('save', async function (next) {

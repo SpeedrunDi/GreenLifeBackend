@@ -6,7 +6,7 @@ module.exports = {
   rootPath,
   uploadPath: path.join(rootPath, 'public/uploads'),
   mongo: {
-    db: 'mongodb+srv://admin:admin@greenlife.yyy0zey.mongodb.net/?retryWrites=true&w=majority',
+    db: process.env.MONGODB || 'mongodb://localhost/green_life',
     options: {
       useNewUrlParser: true,
       useUnifiedTopology: true,
