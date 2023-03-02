@@ -115,7 +115,8 @@ router.delete('/:id', auth, async (req, res) => {
       await Product.deleteOne({_id: req.params.id});
 
       if (product?.image) {
-        fs.unlink(`${config.uploadPath}/${product.image}`, err => {
+        const image = product.image.split('/')
+        fs.unlink(`${config.uploadPath}/${image[1]}`, err => {
           if (err) {
             console.log(err)
           }
