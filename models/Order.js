@@ -14,6 +14,9 @@ const OrderSchema = new Schema({
     type: Number,
     required: true
   },
+  user: {
+    type: Schema.Types.ObjectId
+  },
   products: [{
     _id: {
       type: Schema.Types.ObjectId,

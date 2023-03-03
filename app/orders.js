@@ -3,18 +3,20 @@ const axios = require("axios");
 const Order = require('../models/Order')
 const config = require('../config')
 const auth = require("../middleware/auth");
+const User = require("../models/User");
 
 const router = express.Router()
 
 router.get('/', auth, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(401).send('Нету прав!')
+    const query = {user: req.user._id}
+    if (req.user.role === 'admin') {
+      delete query.user
     }
 
-    const orders = await Order.find().populate('products._id', 'title price')
+    const orders = await Order.find(query).populate('products._id', 'title price')
 
-    return res.send(orders)
+    return res.send(orders.reverse())
   } catch (e) {
     return res.status(500).send(e)
   }
@@ -22,6 +24,13 @@ router.get('/', auth, async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
+    const token = req.cookies.greenlife
+    let user = null
+
+    if (token) {
+      user = await User.findOne({ token })
+    }
+
     if (!req.body?.name || !req.body?.phone) {
       return res.status(400).send({error: "не верные данные"})
     }
@@ -34,7 +43,8 @@ router.post('/', async (req, res) => {
       clientName: req.body.name,
       phone: req.body.phone,
       products: req.body.products,
-      totalPrice: req.body.totalPrice
+      totalPrice: req.body.totalPrice,
+      user: user || null
     }
 
     const order = new Order(orderData)
