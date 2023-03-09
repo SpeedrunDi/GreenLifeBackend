@@ -18,8 +18,8 @@ app.use(express.json())
 app.use(cookieParser())
 app.use(cors({
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  origin: ['http://localhost:3000']
+  allowedHeaders: ['Content-Type'],
+  origin: ['http://localhost:3000'],
 }))
 
 app.use('/users', users)

@@ -7,8 +7,7 @@ const router = express.Router()
 
 const getLiveCookie = user => {
   const { name } = user
-  const maxAge = 730 * 60 * 60
-  return { token: getToken(name, maxAge), maxAge }
+  return { token: getToken(name) }
 }
 
 router.get('/', auth, async (req, res) => {
@@ -33,16 +32,11 @@ router.post('/', async (req, res) => {
 
     const user = new User(userData)
 
-    const { token, maxAge } = getLiveCookie(user)
+    const { token } = getLiveCookie(user)
 
     user.token = token
 
     await user.save()
-
-    res.cookie('greenlife', token, {
-      httpOnly: false,
-      maxAge: maxAge * 1000,
-    })
 
     return res.send(user)
   } catch (e) {
@@ -50,13 +44,26 @@ router.post('/', async (req, res) => {
   }
 })
 
-router.post('/sessions', async (req, res) => {
+router.post('/sessions/cookies', async (req, res) => {
   try {
-    if (req.cookies.greenlife) {
-      const user = await User.findOne({ token: req.cookies.greenlife })
-      return res.send(user)
+    if (!req.query.token) {
+      return res.status(400).send({error: "Cookies not valid"})
     }
 
+    const user = await User.findOne({ token: req.query.token })
+
+    if (!user) {
+      return res.status(404).send({error: "User not found"})
+    }
+
+    return res.send(user)
+  } catch (e) {
+    return res.status(500).send(e)
+  }
+})
+
+router.post('/sessions', async (req, res) => {
+  try {
     if (!req.body.email || !req.body.password) {
       return res.status(401).send({ message: 'Введенные данные не верны!' })
     }
@@ -72,14 +79,7 @@ router.post('/sessions', async (req, res) => {
       return res.status(401).send({ message: 'Введенные данные не верны!' })
     }
 
-    const { token, maxAge } = getLiveCookie(user)
-
-    if (req.body?.remember) {
-      res.cookie('greenlife', token, {
-        httpOnly: false,
-        maxAge: maxAge * 1000,
-      })
-    }
+    const { token } = getLiveCookie(user)
 
     user.token = token
     await user.save({ validateBeforeSave: false })
@@ -93,7 +93,7 @@ router.post('/sessions', async (req, res) => {
 router.delete('/sessions', async (req, res) => {
   try {
     const success = { message: 'Success' }
-    const cookie = req.cookies.greenlife
+    const cookie = req.query.token
 
     if (!cookie) return res.send(success)
 

@@ -1,7 +1,8 @@
 const User = require('../models/User')
 
 const auth = async (req, res, next) => {
-  const token = req.cookies.greenlife
+  const token = req.query.token
+
   if (!token) {
     return res.status(401).send({ error: 'No token present!' })
   }

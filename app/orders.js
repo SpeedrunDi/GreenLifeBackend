@@ -24,7 +24,7 @@ router.get('/', auth, async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const token = req.cookies.greenlife
+    const token = req.query.token
     let user = null
 
     if (token) {

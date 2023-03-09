@@ -1,10 +1,7 @@
 const jwt = require('jsonwebtoken')
-const path = require('path');
 
-const jwtPrivateKey = path.resolve('') + '/keys/private_key.pem';
-
-module.exports.getToken = (displayName, expirationTime) => {
-  return jwt.sign({displayName}, jwtPrivateKey, {
-    expiresIn: expirationTime,
+module.exports.getToken = (displayName) => {
+  return jwt.sign({displayName}, process.env.SECRET_TOKEN, {
+    expiresIn: '60d',
   })
 }
