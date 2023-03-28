@@ -17,6 +17,12 @@ const OrderSchema = new Schema({
   user: {
     type: Schema.Types.ObjectId
   },
+  status: {
+    type: Number,
+    required: true,
+    default: 1,
+    enum: [1, 2, 3]
+  },
   products: [{
     _id: {
       type: Schema.Types.ObjectId,

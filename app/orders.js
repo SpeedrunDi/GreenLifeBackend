@@ -1,22 +1,29 @@
 const express = require('express')
-const axios = require("axios");
+const axios = require("axios")
 const Order = require('../models/Order')
+const User = require("../models/User")
 const config = require('../config')
-const auth = require("../middleware/auth");
-const User = require("../models/User");
+const auth = require("../middleware/auth")
 
 const router = express.Router()
 
 router.get('/', auth, async (req, res) => {
   try {
+    const {status} = req.query
     const query = {user: req.user._id}
     if (req.user.role === 'admin') {
       delete query.user
     }
 
-    const orders = await Order.find(query).populate('products._id', 'title price')
+    if (status === 'active') {
+      query.status = { $in: [1, 2] }
+    } else if (status === 'closed') {
+      query.status = 3
+    }
 
-    return res.send(orders.reverse())
+    const orders = await Order.find(query).populate('products._id', 'title price').sort({status: 1})
+
+    return res.send(orders)
   } catch (e) {
     return res.status(500).send(e)
   }
@@ -71,9 +78,36 @@ router.post('/', async (req, res) => {
       disable_notification: false
     })
 
-    return res.send({message: "данные успешно сохранены"})
+    return res.send({message: "Данные успешно сохранены"})
   } catch (e) {
     return res.status(500).send(e)
+  }
+})
+
+router.patch('/:id', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(401).send({error: 'У вас нет прав'})
+    }
+
+    const id = req.params.id
+    const status = req.query.status
+
+    if (!id) {
+      return res.status(400).send({error: 'ID не передан'})
+    }
+
+    const order = await Order.findById(id)
+
+    if (!order) {
+      return res.send(404).send({error: 'Заказ не найден!'})
+    }
+
+    await Order.findByIdAndUpdate(id, {status}, {new: true})
+
+    return res.send({message: 'Данные успешно обновлены'})
+  } catch (e) {
+    return res.sendStatus(500)
   }
 })
 
